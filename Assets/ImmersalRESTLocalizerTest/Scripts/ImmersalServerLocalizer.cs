@@ -7,6 +7,7 @@ using UnityEngine.Networking;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine.Serialization;
 using UnityEngine.XR.ARCore;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
@@ -18,14 +19,13 @@ namespace ImmersalRESTLocalizerTest
     {
         [SerializeField] private ImmersalRESTConfiguration _configuration;
 
-        [SerializeField] private TextMeshPro _textMeshPro;
+        [SerializeField] private TextMeshPro _logText;
 
         [SerializeField] private Texture2D _sampleTexture;
 
         [SerializeField] private ARCameraManager _cameraManager;
 
         [SerializeField] private GameObject _plane;
-        
 
 
         private string token;
@@ -38,37 +38,49 @@ namespace ImmersalRESTLocalizerTest
             }
         }
 
-        public void SendRequest()
+        public void Localize()
         {
-            // SendRequestAsync().ContinueWith(resTask => { Debug.Log(resTask.Result); });
-            if (!_cameraManager.TryAcquireLatestCpuImage(out var image))
+            _ = LocalizeAsync();
+        }
+
+        private async Task LocalizeAsync()
+        {
+            if (!TryGetCameraImageTexture(out var cameraImageTexture))
             {
-                _textMeshPro.text = "cannot aquire image";
+                _logText.text = "cannot acquire image";
                 return;
             }
 
+            var immersalRes = await SendRequestAsync(cameraImageTexture);
+            _logText.text = immersalRes;
+        }
+
+        private bool TryGetCameraImageTexture(out Texture2D texture2D)
+        {
+            if (!_cameraManager.TryAcquireLatestCpuImage(out var image))
+            {
+                texture2D = null;
+                return false;
+            }
 
             var conversionParams = new XRCpuImage.ConversionParams(
                 image, TextureFormat.RGBA32, XRCpuImage.Transformation.MirrorX);
 
-            var texture2d = new Texture2D(
+            texture2D = new Texture2D(
                 conversionParams.outputDimensions.x,
                 conversionParams.outputDimensions.y,
                 conversionParams.outputFormat, false);
 
-            var buffer = texture2d.GetRawTextureData<byte>();
+            var buffer = texture2D.GetRawTextureData<byte>();
 
             unsafe
             {
                 image.Convert(conversionParams, new IntPtr(buffer.GetUnsafePtr()), buffer.Length);
             }
 
-            texture2d.Apply();
+            texture2D.Apply();
 
-            _plane.GetComponent<MeshRenderer>().material.mainTexture = texture2d;
-
-            _ = SendRequestAsync(texture2d);
-
+            return true;
         }
 
         private async Task<string> SendRequestAsync(Texture2D texture)
@@ -77,7 +89,7 @@ namespace ImmersalRESTLocalizerTest
 
             if (!_cameraManager.TryGetIntrinsics(out var intrinsics))
             {
-                _textMeshPro.text = "cannot get intrinsics";
+                _logText.text = "cannot get intrinsics";
                 return "";
             }
 
@@ -98,18 +110,18 @@ namespace ImmersalRESTLocalizerTest
 
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
-
+            
             try
             {
                 var res = await request.SendWebRequest();
-                _textMeshPro.text = res.downloadHandler.text;
+                _logText.text = res.downloadHandler.text;
 
                 return res.downloadHandler.text;
             }
             catch (Exception e)
             {
-                _textMeshPro.text = request.ToString();
-                return e.ToString();
+                _logText.text = request.error;
+                return request.error;
             }
         }
     }
