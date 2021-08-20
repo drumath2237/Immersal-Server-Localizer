@@ -51,8 +51,12 @@ namespace ImmersalRESTLocalizerTest
                 return;
             }
 
-            var immersalRes = await SendRequestAsync(cameraImageTexture);
-            _logText.text = immersalRes;
+            var resText = await SendRequestAsync(cameraImageTexture);
+
+            var immersalResponse = JsonUtility.FromJson<ImmersalResponseParams>(resText);
+            var immersalSpacePose = CalcImmersalSpacePose(immersalResponse);
+
+            _logText.text = JsonUtility.ToJson(immersalSpacePose);
         }
 
         private bool TryGetCameraImageTexture(out Texture2D texture2D)
@@ -110,7 +114,7 @@ namespace ImmersalRESTLocalizerTest
 
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
-            
+
             try
             {
                 var res = await request.SendWebRequest();
@@ -123,6 +127,33 @@ namespace ImmersalRESTLocalizerTest
                 _logText.text = request.error;
                 return request.error;
             }
+        }
+
+        private Pose CalcImmersalSpacePose(ImmersalResponseParams iParams)
+        {
+            var position = new Vector3(iParams.px, iParams.py, iParams.pz);
+            var rotationMatrix = new Matrix4x4()
+            {
+                m00 = iParams.r00,
+                m01 = iParams.r01,
+                m02 = iParams.r02,
+                m10 = iParams.r10,
+                m11 = iParams.r11,
+                m12 = iParams.r12,
+                m20 = iParams.r20,
+                m21 = iParams.r21,
+                m22 = iParams.r22,
+                m03 = 0,
+                m13 = 0,
+                m23 = 0,
+                m30 = 0,
+                m31 = 0,
+                m32 = 0,
+                m33 = 1
+            };
+            var rotationQuaternion = rotationMatrix.rotation;
+
+            return new Pose {position = position, rotation = rotationQuaternion};
         }
     }
 }
