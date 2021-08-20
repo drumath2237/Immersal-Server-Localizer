@@ -1309,9 +1309,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _configuration: {fileID: 11400000, guid: 7f01d516d066dbc42a0197ce374c461d, type: 2}
   _logText: {fileID: 2016015904}
-  _sampleTexture: {fileID: 2800000, guid: a84435aa9555efd48af80c5aaef76745, type: 3}
   _cameraManager: {fileID: 1952178397}
-  _plane: {fileID: 0}
+  _arSpace: {fileID: 59427627}
+  _cameraTransform: {fileID: 1952178399}
 --- !u!4 &2051814299
 Transform:
   m_ObjectHideFlags: 0

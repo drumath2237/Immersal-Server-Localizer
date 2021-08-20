@@ -21,12 +21,13 @@ namespace ImmersalRESTLocalizerTest
 
         [SerializeField] private TextMeshPro _logText;
 
-        [SerializeField] private Texture2D _sampleTexture;
-
         [SerializeField] private ARCameraManager _cameraManager;
 
-        [SerializeField] private GameObject _plane;
+        [SerializeField] private Transform _arSpace;
 
+        [SerializeField] private Transform _cameraTransform;
+        
+        
 
         private string token;
 
@@ -45,6 +46,12 @@ namespace ImmersalRESTLocalizerTest
 
         private async Task LocalizeAsync()
         {
+            var cameraPose = new Pose
+            {
+                position = _cameraTransform.position,
+                rotation = _cameraTransform.rotation
+            };
+            
             if (!TryGetCameraImageTexture(out var cameraImageTexture))
             {
                 _logText.text = "cannot acquire image";
@@ -54,9 +61,11 @@ namespace ImmersalRESTLocalizerTest
             var resText = await SendRequestAsync(cameraImageTexture);
 
             var immersalResponse = JsonUtility.FromJson<ImmersalResponseParams>(resText);
-            var immersalSpacePose = CalcImmersalSpacePose(immersalResponse);
+            var immersalSpaceCameraPose = CalcImmersalCameraPose(immersalResponse);
 
-            _logText.text = JsonUtility.ToJson(immersalSpacePose);
+            _logText.text = JsonUtility.ToJson(immersalSpaceCameraPose);
+            
+            ApplyARSpaceTransform(cameraPose, immersalSpaceCameraPose);
         }
 
         private bool TryGetCameraImageTexture(out Texture2D texture2D)
@@ -129,7 +138,7 @@ namespace ImmersalRESTLocalizerTest
             }
         }
 
-        private Pose CalcImmersalSpacePose(ImmersalResponseParams iParams)
+        private Pose CalcImmersalCameraPose(ImmersalResponseParams iParams)
         {
             var position = new Vector3(iParams.px, iParams.py, iParams.pz);
             var rotationMatrix = new Matrix4x4()
@@ -154,6 +163,12 @@ namespace ImmersalRESTLocalizerTest
             var rotationQuaternion = rotationMatrix.rotation;
 
             return new Pose {position = position, rotation = rotationQuaternion};
+        }
+
+        private void ApplyARSpaceTransform(Pose cameraPose, Pose immersalPose)
+        {
+            _arSpace.position = cameraPose.position - immersalPose.position;
+            _arSpace.rotation = Quaternion.Inverse(immersalPose.rotation) * cameraPose.rotation;
         }
     }
 }
