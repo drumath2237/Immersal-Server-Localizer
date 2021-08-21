@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Threading;
 using ImmersalRESTLocalizer.Types;
 using TMPro;
 using UnityEngine;
@@ -38,19 +39,21 @@ namespace ImmersalRESTLocalizerTest
 
         public void Localize()
         {
-            _ = LocalizeAsync();
+            LocalizeAsync().Forget();
         }
 
-        private async Task LocalizeAsync()
+        private async UniTask LocalizeAsync()
         {
             _arSpace.position = Vector3.zero;
             _arSpace.rotation = quaternion.identity;
-            
+
             var cameraMatrix = _cameraTransform.localToWorldMatrix;
 
-            if (!TryGetCameraImageTexture(out var cameraImageTexture))
+            var (isSuccess, cameraImageTexture) = await TryGetCameraImageTextureAsync();
+
+            if (!isSuccess)
             {
-                _logText.text = "cannot acquire image";
+                _logText.text += "cannot get camera image texture\n";
                 return;
             }
 
@@ -65,44 +68,56 @@ namespace ImmersalRESTLocalizerTest
             _arSpace.rotation = mapMatrix.rotation;
         }
 
-        private bool TryGetCameraImageTexture(out Texture2D texture2D)
+        private async UniTask<(bool, Texture2D)> TryGetCameraImageTextureAsync()
         {
             if (!_cameraManager.TryAcquireLatestCpuImage(out var image))
             {
-                texture2D = null;
-                return false;
+                return (false, null);
             }
 
-            var conversionParams = new XRCpuImage.ConversionParams(
-                image, TextureFormat.RGBA32, XRCpuImage.Transformation.MirrorX);
-
-            texture2D = new Texture2D(
-                conversionParams.outputDimensions.x,
-                conversionParams.outputDimensions.y,
-                conversionParams.outputFormat, false);
-
-            using (var buffer = texture2D.GetRawTextureData<byte>())
+            var conversionParams = new XRCpuImage.ConversionParams
             {
-                unsafe
-                {
-                    image.Convert(conversionParams, new IntPtr(buffer.GetUnsafePtr()), buffer.Length);
-                }
+                transformation = XRCpuImage.Transformation.MirrorX,
+                outputFormat = TextureFormat.RGBA32,
+                inputRect = new RectInt(0,0,image.width, image.height),
+                outputDimensions = new Vector2Int(image.width, image.height),
+            };
+
+            using var conversionTask = image.ConvertAsync(conversionParams);
+
+            _logText.text += "conversing...\n";
+
+            await UniTask.WaitWhile(() => !conversionTask.status.IsDone(),
+                PlayerLoopTiming.Update, this.GetCancellationTokenOnDestroy());
+
+            if (conversionTask.status != XRCpuImage.AsyncConversionStatus.Ready)
+            {
+                Debug.LogError("conversion task failed");
+                _logText.text += "conversion task failed\n";
+                return (false, null);
             }
 
-            texture2D.Apply();
-            
-            _cameraManager.
+            var texture2d = new Texture2D(
+                conversionTask.conversionParams.outputDimensions.x,
+                conversionTask.conversionParams.outputDimensions.y,
+                conversionTask.conversionParams.outputFormat,
+                false);
 
-            return true;
+            texture2d.LoadRawTextureData(conversionTask.GetData<byte>());
+            texture2d.Apply();
+
+            _logText.text += "conversion done\n";
+
+            return (true, texture2d);
         }
 
-        private async Task<string> SendRequestAsync(Texture2D texture)
+        private async UniTask<string> SendRequestAsync(Texture2D texture)
         {
             var base64 = Convert.ToBase64String(texture.EncodeToPNG());
 
             if (!_cameraManager.TryGetIntrinsics(out var intrinsics))
             {
-                _logText.text = "cannot get intrinsics";
+                _logText.text += "cannot get intrinsics\n";
                 return "";
             }
 
