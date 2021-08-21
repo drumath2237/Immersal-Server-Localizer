@@ -7,11 +7,8 @@ using UnityEngine.Networking;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEngine.Serialization;
-using UnityEngine.XR.ARCore;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
-
 
 namespace ImmersalRESTLocalizerTest
 {
@@ -19,15 +16,14 @@ namespace ImmersalRESTLocalizerTest
     {
         [SerializeField] private ImmersalRESTConfiguration _configuration;
 
-        [SerializeField] private TextMeshPro _logText;
+        [SerializeField] private TextMeshProUGUI _logText;
 
         [SerializeField] private ARCameraManager _cameraManager;
 
         [SerializeField] private Transform _arSpace;
 
         [SerializeField] private Transform _cameraTransform;
-        
-        
+
 
         private string token;
 
@@ -46,12 +42,8 @@ namespace ImmersalRESTLocalizerTest
 
         private async Task LocalizeAsync()
         {
-            var cameraPose = new Pose
-            {
-                position = _cameraTransform.position,
-                rotation = _cameraTransform.rotation
-            };
-            
+            var cameraMatrix = _cameraTransform.localToWorldMatrix;
+
             if (!TryGetCameraImageTexture(out var cameraImageTexture))
             {
                 _logText.text = "cannot acquire image";
@@ -61,11 +53,12 @@ namespace ImmersalRESTLocalizerTest
             var resText = await SendRequestAsync(cameraImageTexture);
 
             var immersalResponse = JsonUtility.FromJson<ImmersalResponseParams>(resText);
-            var immersalSpaceCameraPose = CalcImmersalCameraPose(immersalResponse);
 
-            _logText.text = JsonUtility.ToJson(immersalSpaceCameraPose);
-            
-            ApplyARSpaceTransform(cameraPose, immersalSpaceCameraPose);
+            var immersalCameraMatrix = CalcImmersalCameraMatrix(immersalResponse);
+            var mapMatrix = cameraMatrix * immersalCameraMatrix.inverse * _arSpace.localToWorldMatrix;
+
+            _arSpace.position = mapMatrix.GetColumn(3);
+            _arSpace.rotation = mapMatrix.rotation;
         }
 
         private bool TryGetCameraImageTexture(out Texture2D texture2D)
@@ -133,15 +126,14 @@ namespace ImmersalRESTLocalizerTest
             }
             catch (Exception e)
             {
-                _logText.text = request.error;
+                _logText.text = e.ToString();
                 return request.error;
             }
         }
 
-        private Pose CalcImmersalCameraPose(ImmersalResponseParams iParams)
+        private Matrix4x4 CalcImmersalCameraMatrix(ImmersalResponseParams iParams)
         {
-            var position = new Vector3(iParams.px, iParams.py, iParams.pz);
-            var rotationMatrix = new Matrix4x4()
+            var mat = new Matrix4x4
             {
                 m00 = iParams.r00,
                 m01 = iParams.r01,
@@ -152,23 +144,15 @@ namespace ImmersalRESTLocalizerTest
                 m20 = iParams.r20,
                 m21 = iParams.r21,
                 m22 = iParams.r22,
-                m03 = 0,
-                m13 = 0,
-                m23 = 0,
-                m30 = 0,
-                m31 = 0,
-                m32 = 0,
+
+                m03 = iParams.px,
+                m13 = iParams.py,
+                m23 = iParams.pz,
+
                 m33 = 1
             };
-            var rotationQuaternion = rotationMatrix.rotation;
 
-            return new Pose {position = position, rotation = rotationQuaternion};
-        }
-
-        private void ApplyARSpaceTransform(Pose cameraPose, Pose immersalPose)
-        {
-            _arSpace.position = cameraPose.position - immersalPose.position;
-            _arSpace.rotation = Quaternion.Inverse(immersalPose.rotation) * cameraPose.rotation;
+            return mat;
         }
     }
 }
