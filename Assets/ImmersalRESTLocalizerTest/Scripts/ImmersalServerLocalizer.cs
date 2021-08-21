@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Text;
-using System.Threading;
 using ImmersalRESTLocalizer.Types;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
-using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
-using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
