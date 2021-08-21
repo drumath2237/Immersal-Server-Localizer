@@ -1179,11 +1179,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2751d22c5a2c4372a277c9947ddc177e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _configuration: {fileID: 11400000, guid: 7f01d516d066dbc42a0197ce374c461d, type: 2}
-  _logText: {fileID: 9201934}
-  _cameraManager: {fileID: 1952178397}
-  _arSpace: {fileID: 59427627}
-  _cameraTransform: {fileID: 1952178399}
+  configuration: {fileID: 11400000, guid: 7f01d516d066dbc42a0197ce374c461d, type: 2}
+  logText: {fileID: 9201934}
+  cameraManager: {fileID: 1952178397}
+  arSpace: {fileID: 59427627}
+  cameraTransform: {fileID: 1952178399}
 --- !u!4 &2051814299
 Transform:
   m_ObjectHideFlags: 0
