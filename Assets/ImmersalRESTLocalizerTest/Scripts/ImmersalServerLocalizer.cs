@@ -7,6 +7,7 @@ using UnityEngine.Networking;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Unity.Collections.LowLevel.Unsafe;
+using Unity.Mathematics;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 
@@ -42,6 +43,9 @@ namespace ImmersalRESTLocalizerTest
 
         private async Task LocalizeAsync()
         {
+            _arSpace.position = Vector3.zero;
+            _arSpace.rotation = quaternion.identity;
+            
             var cameraMatrix = _cameraTransform.localToWorldMatrix;
 
             if (!TryGetCameraImageTexture(out var cameraImageTexture))
@@ -77,14 +81,17 @@ namespace ImmersalRESTLocalizerTest
                 conversionParams.outputDimensions.y,
                 conversionParams.outputFormat, false);
 
-            var buffer = texture2D.GetRawTextureData<byte>();
-
-            unsafe
+            using (var buffer = texture2D.GetRawTextureData<byte>())
             {
-                image.Convert(conversionParams, new IntPtr(buffer.GetUnsafePtr()), buffer.Length);
+                unsafe
+                {
+                    image.Convert(conversionParams, new IntPtr(buffer.GetUnsafePtr()), buffer.Length);
+                }
             }
 
             texture2D.Apply();
+            
+            _cameraManager.
 
             return true;
         }
