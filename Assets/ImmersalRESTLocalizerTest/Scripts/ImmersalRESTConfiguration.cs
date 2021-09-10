@@ -1,7 +1,7 @@
 ﻿using ImmersalRESTLocalizer.Types;
 using UnityEngine;
 
-namespace ImmersalRESTLocalizerTest
+namespace ImmersalRESTLocalizer
 {
     [CreateAssetMenu(fileName = "ImmersalConfig", menuName = "Immersal REST Localizer/ConfigurationScriptableObject",
         order = 0)]
