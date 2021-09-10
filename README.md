@@ -15,7 +15,7 @@ ARFoundationに対応しているモバイル端末で使用可能です。
 ## Usage
 
 `Assets/ImmersalRESTLocalizerTest/Settings/`以下に、
-Createメニューから`Immersal REST Localizer/ConfigurationScriptableObject`
+Createメニューから`Immersal REST Localizer`＞`ConfigurationScriptableObject`
 でConfigファイルを作成し、Immersal Developer TokenとマップのID配列を
 入力してください。
 
@@ -28,7 +28,12 @@ Createメニューから`Immersal REST Localizer/ConfigurationScriptableObject`
 
 ## More info
 
-ARFoundationでカメラ画像を取得する際に、途中からエラーになってしまう現象があります。原因不明なので解決できるかわからないです......。
+~~ARFoundationでカメラ画像を取得する際に、途中からエラーになってしまう現象があります。原因不明なので解決できるかわからないです......。~~
+
+(2021/9/11追記)
+
+非同期メソッドを使っていてXRCpuImageのDisposeのタイミングをミスっていたらしいです。
+現在は修正されています。
 
 ## Contact
 
