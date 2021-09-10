@@ -1,7 +1,14 @@
 ﻿using System;
+using UnityEngine;
 
 namespace ImmersalRESTLocalizer.Types
 {
+    [Serializable]
+    public struct MapId
+    {
+        public int id;
+    }
+
     [Serializable]
     public struct ImmersalRequestParams
     {

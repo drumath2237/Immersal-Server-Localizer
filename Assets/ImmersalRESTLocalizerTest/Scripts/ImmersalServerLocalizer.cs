@@ -67,7 +67,7 @@ namespace ImmersalRESTLocalizer
 
             var immersalResponse = JsonUtility.FromJson<ImmersalResponseParams>(resText);
 
-            var immersalCameraMatrix = CalcImmersalCameraMatrix(immersalResponse);
+            var immersalCameraMatrix = immersalResponse.ToMatrix4();
             var mapMatrix = cameraMatrix * immersalCameraMatrix.inverse * arSpace.localToWorldMatrix;
 
             arSpace.position = mapMatrix.GetColumn(3);
@@ -116,28 +116,5 @@ namespace ImmersalRESTLocalizer
             }
         }
 
-        private static Matrix4x4 CalcImmersalCameraMatrix(ImmersalResponseParams iParams)
-        {
-            var mat = new Matrix4x4
-            {
-                m00 = iParams.r00,
-                m01 = iParams.r01,
-                m02 = iParams.r02,
-                m10 = iParams.r10,
-                m11 = iParams.r11,
-                m12 = iParams.r12,
-                m20 = iParams.r20,
-                m21 = iParams.r21,
-                m22 = iParams.r22,
-
-                m03 = iParams.px,
-                m13 = iParams.py,
-                m23 = iParams.pz,
-
-                m33 = 1
-            };
-
-            return mat;
-        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 namespace ImmersalRESTLocalizer.Types
 {
@@ -20,6 +21,30 @@ namespace ImmersalRESTLocalizer.Types
         public float r20;
         public float r21;
         public float r22;
+
+        public Matrix4x4 ToMatrix4()
+        {
+            var mat = new Matrix4x4
+            {
+                m00 = r00,
+                m01 = r01,
+                m02 = r02,
+                m10 = r10,
+                m11 = r11,
+                m12 = r12,
+                m20 = r20,
+                m21 = r21,
+                m22 = r22,
+
+                m03 = px,
+                m13 = py,
+                m23 = pz,
+
+                m33 = 1
+            };
+
+            return mat;
+        }
     }
 
     [Serializable]
