@@ -23,6 +23,7 @@ namespace ImmersalRESTLocalizerTest
 
         [SerializeField] private Transform cameraTransform;
 
+        private Texture2D lastARCameraImage;
 
         private string _token;
 
@@ -35,6 +36,17 @@ namespace ImmersalRESTLocalizerTest
                 _token = configuration.token;
                 _mapIds = configuration.MapIds;
             }
+
+        }
+
+        private void OnEnable()
+        {
+            cameraManager.frameReceived += OnFrameReceived;
+        }
+
+        private void OnDisable()
+        {
+            cameraManager.frameReceived -= OnFrameReceived;
         }
 
         public void Localize()
@@ -48,16 +60,8 @@ namespace ImmersalRESTLocalizerTest
             arSpace.rotation = quaternion.identity;
 
             var cameraMatrix = cameraTransform.localToWorldMatrix;
-
-            var (isSuccess, cameraImageTexture) = await TryGetCameraImageTextureAsync();
-
-            if (!isSuccess)
-            {
-                logText.text += "cannot get camera image texture\n";
-                return;
-            }
-
-            var resText = await SendRequestAsync(cameraImageTexture);
+            
+            var resText = await SendRequestAsync(lastARCameraImage);
 
             var immersalResponse = JsonUtility.FromJson<ImmersalResponseParams>(resText);
 
@@ -66,6 +70,22 @@ namespace ImmersalRESTLocalizerTest
 
             arSpace.position = mapMatrix.GetColumn(3);
             arSpace.rotation = mapMatrix.rotation;
+        }
+
+        private void OnFrameReceived(ARCameraFrameEventArgs args)
+        {
+            TryGetCameraImageTextureAsync().ContinueWith(result =>
+            {
+                var (isSuccess, texture) = result;
+                if (!isSuccess)
+                {
+                    logText.text += "failed get camera image\n";
+                    return;
+                }
+
+                lastARCameraImage = texture;
+            });
+
         }
 
         private async UniTask<(bool, Texture2D)> TryGetCameraImageTextureAsync()
@@ -85,15 +105,12 @@ namespace ImmersalRESTLocalizerTest
 
             using var conversionTask = image.ConvertAsync(conversionParams);
 
-            logText.text += "conversing...\n";
-
             await UniTask.WaitWhile(() => !conversionTask.status.IsDone(),
                 PlayerLoopTiming.Update, this.GetCancellationTokenOnDestroy());
 
             if (conversionTask.status != XRCpuImage.AsyncConversionStatus.Ready)
             {
                 Debug.LogError("conversion task failed");
-                logText.text += "conversion task failed\n";
                 return (false, null);
             }
 
@@ -105,8 +122,6 @@ namespace ImmersalRESTLocalizerTest
 
             texture2d.LoadRawTextureData(conversionTask.GetData<byte>());
             texture2d.Apply();
-
-            logText.text += "conversion done\n";
 
             return (true, texture2d);
         }
@@ -153,7 +168,7 @@ namespace ImmersalRESTLocalizerTest
             }
         }
 
-        private Matrix4x4 CalcImmersalCameraMatrix(ImmersalResponseParams iParams)
+        private static Matrix4x4 CalcImmersalCameraMatrix(ImmersalResponseParams iParams)
         {
             var mat = new Matrix4x4
             {
