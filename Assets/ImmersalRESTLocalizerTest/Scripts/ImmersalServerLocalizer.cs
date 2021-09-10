@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
+using System.Threading;
 using ImmersalRESTLocalizer.Types;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
 using Cysharp.Threading.Tasks;
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
@@ -36,17 +40,6 @@ namespace ImmersalRESTLocalizerTest
                 _token = configuration.token;
                 _mapIds = configuration.MapIds;
             }
-
-        }
-
-        private void OnEnable()
-        {
-            cameraManager.frameReceived += OnFrameReceived;
-        }
-
-        private void OnDisable()
-        {
-            cameraManager.frameReceived -= OnFrameReceived;
         }
 
         public void Localize()
@@ -61,7 +54,17 @@ namespace ImmersalRESTLocalizerTest
 
             var cameraMatrix = cameraTransform.localToWorldMatrix;
             
-            var resText = await SendRequestAsync(lastARCameraImage);
+            if (!cameraManager.TryAcquireLatestCpuImage(out var image))
+            {
+                logText.text += "cannot acquire image\n";
+                return;
+            }
+
+            var cameraTexture = ConvertARCameraImageToTexture(image);
+            
+            image.Dispose();
+
+            var resText = await SendRequestAsync(cameraTexture);
 
             var immersalResponse = JsonUtility.FromJson<ImmersalResponseParams>(resText);
 
@@ -72,70 +75,52 @@ namespace ImmersalRESTLocalizerTest
             arSpace.rotation = mapMatrix.rotation;
         }
 
-        private void OnFrameReceived(ARCameraFrameEventArgs args)
+        private static unsafe Texture2D ConvertARCameraImageToTexture(XRCpuImage image)
         {
-            // TryGetCameraImageTextureAsync().ContinueWith(result =>
-            // {
-            //     var (isSuccess, texture) = result;
-            //     if (!isSuccess)
-            //     {
-            //         logText.text += "failed get camera image\n";
-            //         return;
-            //     }
-            //
-            //     lastARCameraImage = texture;
-            // });
-            
-
-            if (!cameraManager.TryAcquireLatestCpuImage(out var image))
-            {
-                logText.text += "failed to get image\n";
-                return;
-            }
-
-            logText.text += "success get image\n";
-            
-            image.Dispose();
-
-
-        }
-
-        bool TryAcquireCameraImageTextureSync(out Texture2D texture)
-        {
-            if (cameraManager.TryAcquireLatestCpuImage(out var image))
-            {
-                texture = null;
-                return false;
-            }
-
-            texture = null;
-            return true;
-        }
-
-        private async UniTask<(bool, Texture2D)> TryGetCameraImageTextureAsync()
-        {
-            if (!cameraManager.TryAcquireLatestCpuImage(out var image))
-            {
-                return (false, null);
-            }
-
             var conversionParams = new XRCpuImage.ConversionParams
             {
                 transformation = XRCpuImage.Transformation.MirrorX,
                 outputFormat = TextureFormat.RGBA32,
-                inputRect = new RectInt(0,0,image.width, image.height),
+                inputRect = new RectInt(0, 0, image.width, image.height),
+                outputDimensions = new Vector2Int(image.width, image.height),
+            };
+
+            var size = image.GetConvertedDataSize(conversionParams);
+            using var buffer = new NativeArray<byte>(size, Allocator.Temp);
+            image.Convert(conversionParams, new IntPtr(buffer.GetUnsafePtr()), buffer.Length);
+
+            var texture = new Texture2D(
+                conversionParams.outputDimensions.x,
+                conversionParams.outputDimensions.y,
+                conversionParams.outputFormat,
+                false
+            );
+            texture.LoadRawTextureData(buffer);
+            texture.Apply();
+
+            return texture;
+        }
+
+        private static async UniTask<Texture2D> ConvertARCameraImageToTextureAsync(XRCpuImage image,
+            CancellationToken cancellationToken)
+        {
+            var conversionParams = new XRCpuImage.ConversionParams
+            {
+                transformation = XRCpuImage.Transformation.MirrorX,
+                outputFormat = TextureFormat.RGBA32,
+                inputRect = new RectInt(0, 0, image.width, image.height),
                 outputDimensions = new Vector2Int(image.width, image.height),
             };
 
             using var conversionTask = image.ConvertAsync(conversionParams);
 
             await UniTask.WaitWhile(() => !conversionTask.status.IsDone(),
-                PlayerLoopTiming.Update, this.GetCancellationTokenOnDestroy());
+                PlayerLoopTiming.Update, cancellationToken);
 
             if (conversionTask.status != XRCpuImage.AsyncConversionStatus.Ready)
             {
                 Debug.LogError("conversion task failed");
-                return (false, null);
+                return null;
             }
 
             var texture2d = new Texture2D(
@@ -147,7 +132,7 @@ namespace ImmersalRESTLocalizerTest
             texture2d.LoadRawTextureData(conversionTask.GetData<byte>());
             texture2d.Apply();
 
-            return (true, texture2d);
+            return texture2d;
         }
 
         private async UniTask<string> SendRequestAsync(Texture2D texture)
