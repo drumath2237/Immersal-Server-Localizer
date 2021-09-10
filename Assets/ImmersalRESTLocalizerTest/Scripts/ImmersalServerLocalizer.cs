@@ -74,18 +74,42 @@ namespace ImmersalRESTLocalizerTest
 
         private void OnFrameReceived(ARCameraFrameEventArgs args)
         {
-            TryGetCameraImageTextureAsync().ContinueWith(result =>
+            // TryGetCameraImageTextureAsync().ContinueWith(result =>
+            // {
+            //     var (isSuccess, texture) = result;
+            //     if (!isSuccess)
+            //     {
+            //         logText.text += "failed get camera image\n";
+            //         return;
+            //     }
+            //
+            //     lastARCameraImage = texture;
+            // });
+            
+
+            if (!cameraManager.TryAcquireLatestCpuImage(out var image))
             {
-                var (isSuccess, texture) = result;
-                if (!isSuccess)
-                {
-                    logText.text += "failed get camera image\n";
-                    return;
-                }
+                logText.text += "failed to get image\n";
+                return;
+            }
 
-                lastARCameraImage = texture;
-            });
+            logText.text += "success get image\n";
+            
+            image.Dispose();
 
+
+        }
+
+        bool TryAcquireCameraImageTextureSync(out Texture2D texture)
+        {
+            if (cameraManager.TryAcquireLatestCpuImage(out var image))
+            {
+                texture = null;
+                return false;
+            }
+
+            texture = null;
+            return true;
         }
 
         private async UniTask<(bool, Texture2D)> TryGetCameraImageTextureAsync()
