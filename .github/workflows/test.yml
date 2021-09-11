@@ -18,14 +18,6 @@ jobs:
            UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
           projectPath: .
-          # テストの実行結果もみたい場合は githubToken を指定する
-          # secrets.GITHUB_TOKEN は Secrets 未登録でも利用可能
           githubToken: ${{ secrets.GITHUB_TOKEN }}
-
-          # Unity プロジェクトのバージョンを指定する
-          # ProjectSettings/ProjectVersion.txt に記載されているバージョンを入力すれば OK
           unityVersion: 2020.3.11f1
-
-          # 実行したいテストの種類を指定できる
-          # 指定可能な値は All, PlayMode, EditMode
-         testMode: EditMode
+          testMode: EditMode
