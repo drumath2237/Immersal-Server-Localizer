@@ -1,4 +1,6 @@
-# Immersal Server Localizer Sample
+# Immersal Server Localizer
+
+[![Run EditMode Test](https://github.com/drumath2237/Immersal-Server-Localizer/actions/workflows/test.yml/badge.svg)](https://github.com/drumath2237/Immersal-Server-Localizer/actions/workflows/test.yml)
 
 ## About
 
