@@ -7,6 +7,12 @@
       "dependencies": {},
       "hash": "4f6166102d3c9bd4dcf9acdc48ead7a618cfe891"
     },
+    "com.drumath2237.immersal-server-localizer": {
+      "version": "file:ImmersalServerLocalizer",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {}
+    },
     "com.unity.collab-proxy": {
       "version": "1.5.7",
       "depth": 0,

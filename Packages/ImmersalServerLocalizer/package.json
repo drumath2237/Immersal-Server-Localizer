@@ -1,0 +1,10 @@
+{
+  "name": "com.drumath2237.immersal-server-localizer",
+  "displayName": "Immersal Server Localizer",
+  "version": "0.1.0",
+  "unity": "2020.3",
+  "author": {
+    "name": "drumath2237",
+    "url": "https://twitter.com/ninisan_drumath"
+  }
+}
