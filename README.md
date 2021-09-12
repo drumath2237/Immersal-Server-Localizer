@@ -18,7 +18,24 @@ ImmersalのREST APIを使用して空間の位置合わせを行うUnity Package
 このパッケージは以下のパッケージに依存していますので、インストールをしてください。
 
 - ARFoundation 4.1.7
-- UniTask
+- UniTask 2.2.5
+
+Immersal
+Server Localizerパッケージをインストールするためには、
+PackageManagerの「Add package from git URL...」をクリックし、
+`https://github.com/drumath2237/Immersal-Server-Localizer.git?path=/Packages/ImmersalServerLocalizer`とします。
+
+もしくはmanifest.jsonを直接編集して、
+
+```json:manifest.json
+{
+  "dependency":{
+    "com.drumath2237.immersal-server-localizer": "https://github.com/drumath2237/Immersal-Server-Localizer.git?path=/Packages/ImmersalServerLocalizer",
+  }
+}
+```
+
+を追記します。
 
 ## Usage
 
