@@ -2,7 +2,6 @@
 using TMPro;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
-using Unity.Mathematics;
 using UnityEngine.XR.ARFoundation;
 
 namespace ImmersalRESTLocalizer
@@ -34,7 +33,7 @@ namespace ImmersalRESTLocalizer
         private async UniTask LocalizeAsync()
         {
             arSpace.position = Vector3.zero;
-            arSpace.rotation = quaternion.identity;
+            arSpace.rotation = Quaternion.identity;
 
             var cameraMatrix = cameraTransform.localToWorldMatrix;
 

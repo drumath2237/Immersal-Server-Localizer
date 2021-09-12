@@ -15,7 +15,10 @@ ImmersalのREST APIを使用して空間の位置合わせを行うUnity Package
 
 ## Install
 
-TBD
+このパッケージは以下のパッケージに依存していますので、インストールをしてください。
+
+- ARFoundation 4.1.7
+- UniTask
 
 ## Usage
 
