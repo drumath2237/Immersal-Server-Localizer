@@ -46,6 +46,7 @@ namespace ImmersalRESTLocalizer
             }
             catch (Exception e)
             {
+                Debug.Log($"Error WebRequest: {e}");
                 return request.error;
             }
         }

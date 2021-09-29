@@ -40,7 +40,9 @@ namespace ImmersalRESTLocalizer
                 return;
             }
 
-            var cameraTexture =ARImageProcessingUtil.ConvertARCameraImageToTexture(image);
+            var cameraTexture =
+                await ARImageProcessingUtil.ConvertARCameraImageToTextureAsync(image,
+                    this.GetCancellationTokenOnDestroy());
             image.Dispose();
 
             if (!cameraManager.TryGetIntrinsics(out var intrinsics))
