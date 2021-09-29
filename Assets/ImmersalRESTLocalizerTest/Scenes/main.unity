@@ -327,7 +327,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -0.4499817, y: -540}
+  m_AnchoredPosition: {x: -0.44995117, y: -540}
   m_SizeDelta: {x: -318.09998, y: 91.6}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &624724647
@@ -375,8 +375,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2051814298}
-        m_TargetAssemblyTypeName: ImmersalRESTLocalizerTest.ImmersalServerLocalizer,
-          Assembly-CSharp
+        m_TargetAssemblyTypeName: ImmersalRESTLocalizer.ImmersalServerLocalizer,
+          ImmersalRESTLocalizer
         m_MethodName: Localize
         m_Mode: 1
         m_Arguments:
@@ -1176,7 +1176,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2051814297}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2751d22c5a2c4372a277c9947ddc177e, type: 3}
+  m_Script: {fileID: 11500000, guid: d1c9872ae42dd954aaf0233ce3e79e23, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   configuration: {fileID: 11400000, guid: f03ec9fdf8b868040973b9dcfde25c05, type: 2}
