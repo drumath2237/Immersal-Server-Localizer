@@ -1,5 +1,4 @@
 ﻿using ImmersalRESTLocalizer.Types;
-using TMPro;
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using UnityEngine.XR.ARFoundation;
@@ -10,8 +9,6 @@ namespace ImmersalRESTLocalizer
     {
         [SerializeField] private ImmersalRESTConfiguration configuration;
 
-        [SerializeField] private TextMeshProUGUI logText;
-
         [SerializeField] private ARCameraManager cameraManager;
 
         [SerializeField] private Transform arSpace;
@@ -19,7 +16,7 @@ namespace ImmersalRESTLocalizer
         [SerializeField] private Transform cameraTransform;
 
         private ImmersalRestClient _immersalRestClient;
-        
+
         private void Start()
         {
             _immersalRestClient = new ImmersalRestClient(configuration);
@@ -39,21 +36,21 @@ namespace ImmersalRESTLocalizer
 
             if (!cameraManager.TryAcquireLatestCpuImage(out var image))
             {
-                logText.text += "cannot acquire image\n";
+                Debug.Log("cannot acquire cpu image");
                 return;
             }
 
-            var cameraTexture = ARImageProcessingUtil.ConvertARCameraImageToTexture(image);
+            var cameraTexture =ARImageProcessingUtil.ConvertARCameraImageToTexture(image);
             image.Dispose();
 
             if (!cameraManager.TryGetIntrinsics(out var intrinsics))
             {
-                logText.text += "cannot acquire intrinsics\n";
+                Debug.Log("cannot acquire intrinsics");
                 return;
             }
 
             var resText = await _immersalRestClient.SendRequestAsync(intrinsics, cameraTexture);
-            
+
             var immersalResponse = JsonUtility.FromJson<ImmersalResponseParams>(resText);
 
             var immersalCameraMatrix = immersalResponse.ToMatrix4();
@@ -62,7 +59,5 @@ namespace ImmersalRESTLocalizer
             arSpace.position = mapMatrix.GetColumn(3);
             arSpace.rotation = mapMatrix.rotation;
         }
-        
-
     }
 }
