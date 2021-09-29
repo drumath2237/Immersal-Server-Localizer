@@ -13,8 +13,6 @@ namespace ImmersalRESTLocalizer
 
         [SerializeField] private Transform arSpace;
 
-        [SerializeField] private Transform cameraTransform;
-
         private ImmersalRestClient _immersalRestClient;
 
         private void Start()
@@ -32,7 +30,7 @@ namespace ImmersalRESTLocalizer
             arSpace.position = Vector3.zero;
             arSpace.rotation = Quaternion.identity;
 
-            var cameraMatrix = cameraTransform.localToWorldMatrix;
+            var cameraMatrix = cameraManager.transform.localToWorldMatrix;
 
             if (!cameraManager.TryAcquireLatestCpuImage(out var image))
             {
