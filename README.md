@@ -14,6 +14,8 @@ ImmersalのREST APIを使用して空間の位置合わせを行うUnity Package
 - UniTask 2.2.5
 - ARFoundation 4.1.7
 - Keijiro/Pcx
+- Pixel 4a 5G
+- Windows 10 Home
 
 ## Install
 
@@ -54,8 +56,16 @@ PackageManagerの「Add package from git URL...」をクリックし、
 シーン中のAR Space以下に配置したオブジェクトが
 位置合わせに適用されますので、お好みでImmersalのply点群などを配置してみてください。
 
-このスクリプトではunsafeなコードが存在しますので、
-Project SettingsからAllow Unsafeを有効にしてください。
+~~このスクリプトではunsafeなコードが存在しますので、
+Project SettingsからAllow Unsafeを有効にしてください。~~
+
+## Cahnge Log
+
+- **2021/9/30**
+  - TextMeshProへの依存を消去しました
+  - XRCpuImage->Texture2Dへの変換をasyncメソッドに移行できました
+    - これによりunsafeなコードを使う必要がなくなりました
+  - カメラのtransformをARCameraManagerのついたオブジェクトから取得するようにしました
 
 ## Contact
 
